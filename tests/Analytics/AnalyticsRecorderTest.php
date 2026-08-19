@@ -9,6 +9,7 @@ use BlackpigCreatif\Confessionnal\Models\FormField;
 use BlackpigCreatif\Confessionnal\Models\FormPage;
 use BlackpigCreatif\Confessionnal\Models\PageAnalytic;
 use BlackpigCreatif\Confessionnal\Models\Section;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 
 function createAnalyticsForm(FormMode $mode = FormMode::CONVERSATIONAL): Form
@@ -131,7 +132,7 @@ it('does not record analytics in preview mode', function () {
     $form = createAnalyticsForm();
     $form->update(['is_published' => false]);
 
-    $url = \Illuminate\Support\Facades\URL::signedRoute('confessionnal.fill', [
+    $url = URL::signedRoute('confessionnal.fill', [
         'slug' => 'analytics-form',
         'preview' => 1,
     ]);
