@@ -8,6 +8,7 @@ use BlackpigCreatif\Confessionnal\Models\FormField;
 use BlackpigCreatif\Confessionnal\Models\FormPage;
 use BlackpigCreatif\Confessionnal\Models\Section;
 use BlackpigCreatif\Confessionnal\Models\Submission;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 function createExportableForm(): Form
 {
@@ -54,7 +55,7 @@ function createExportableForm(): Form
     return $form;
 }
 
-function parseCsvResponse(\Symfony\Component\HttpFoundation\StreamedResponse $response): array
+function parseCsvResponse(StreamedResponse $response): array
 {
     ob_start();
     $response->sendContent();
@@ -74,7 +75,7 @@ it('generates a streamed CSV response', function () {
 
     $response = SubmissionCsvExport::download($form);
 
-    expect($response)->toBeInstanceOf(\Symfony\Component\HttpFoundation\StreamedResponse::class)
+    expect($response)->toBeInstanceOf(StreamedResponse::class)
         ->and($response->headers->get('Content-Type'))->toBe('text/csv');
 });
 

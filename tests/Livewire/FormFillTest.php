@@ -35,8 +35,8 @@ function createFormWithFields(FormMode $mode = FormMode::CONVERSATIONAL, int $fi
         FormField::create([
             'form_page_id' => $page->id,
             'type' => FieldType::TEXT,
-            'label' => "Question " . ($i + 1),
-            'key' => "question_" . ($i + 1),
+            'label' => 'Question ' . ($i + 1),
+            'key' => 'question_' . ($i + 1),
             'is_required' => $i === 0,
             'sort_order' => $i,
         ]);

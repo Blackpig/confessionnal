@@ -2,7 +2,6 @@
 
 namespace BlackpigCreatif\Confessionnal\Support;
 
-use BlackpigCreatif\Confessionnal\Contracts\CanReceiveSubmissions;
 use BlackpigCreatif\Confessionnal\Models\Form;
 use BlackpigCreatif\Confessionnal\Models\Submission;
 use Illuminate\Database\Eloquent\Model;

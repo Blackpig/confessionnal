@@ -8,6 +8,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubmissionsRelationManager extends RelationManager
 {
@@ -43,7 +44,7 @@ class SubmissionsRelationManager extends RelationManager
                 Actions\Action::make('export_csv')
                     ->label('Export CSV')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function (): \Symfony\Component\HttpFoundation\StreamedResponse {
+                    ->action(function (): StreamedResponse {
                         $form = $this->getOwnerRecord();
 
                         return SubmissionCsvExport::download($form);
