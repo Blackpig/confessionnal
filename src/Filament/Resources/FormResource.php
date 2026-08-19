@@ -6,6 +6,7 @@ use BlackpigCreatif\Confessionnal\Contracts\CanReceiveSubmissions;
 use BlackpigCreatif\Confessionnal\Enums\FormMode;
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\Pages;
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\RelationManagers;
+use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\Widgets;
 use BlackpigCreatif\Confessionnal\Models\Form;
 use BlackpigCreatif\Confessionnal\Support\ModelDiscovery;
 use Filament\Actions;
@@ -206,6 +207,13 @@ class FormResource extends Resource
         }
 
         return $state;
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            Widgets\FormAnalyticsOverview::class,
+        ];
     }
 
     public static function getRelations(): array

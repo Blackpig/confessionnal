@@ -3,6 +3,7 @@
 namespace BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\Pages;
 
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource;
+use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\Widgets\FormAnalyticsOverview;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\URL;
@@ -10,6 +11,13 @@ use Illuminate\Support\Facades\URL;
 class EditForm extends EditRecord
 {
     protected static string $resource = FormResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            FormAnalyticsOverview::class,
+        ];
+    }
 
     protected function getHeaderActions(): array
     {

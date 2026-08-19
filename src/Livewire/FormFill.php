@@ -7,6 +7,7 @@ use BlackpigCreatif\Confessionnal\Enums\FormMode;
 use BlackpigCreatif\Confessionnal\Models\Form;
 use BlackpigCreatif\Confessionnal\Models\FormField;
 use BlackpigCreatif\Confessionnal\Models\Submission;
+use BlackpigCreatif\Confessionnal\Support\AnalyticsRecorder;
 use BlackpigCreatif\Confessionnal\Support\ConditionEvaluator;
 use BlackpigCreatif\Confessionnal\Support\TargetModelMapper;
 use Illuminate\Contracts\View\View;
@@ -52,6 +53,9 @@ class FormFill extends Component
     /** Redirect URL after submission (if set) */
     public ?string $redirectUrl = null;
 
+    /** Whether the respondent has advanced past the first step */
+    public bool $hasStarted = false;
+
     public function mount(string $slug, ?string $locale = null): void
     {
         $this->locale = $locale ?? app()->getLocale();
@@ -69,6 +73,11 @@ class FormFill extends Component
 
         $this->captureQueryParams();
         $this->buildSteps();
+
+        if (! $this->preview) {
+            AnalyticsRecorder::recordView($this->form->id);
+            $this->recordStepPageView(0);
+        }
     }
 
     public function render(): View
@@ -106,9 +115,18 @@ class FormFill extends Component
         }
 
         if ($this->currentStep < count($this->steps) - 1) {
+            if (! $this->preview && ! $this->hasStarted) {
+                AnalyticsRecorder::recordStart($this->form->id);
+                $this->hasStarted = true;
+            }
+
             $this->currentStep++;
             $this->stepErrors = [];
             $this->skipHiddenSteps(direction: 'forward');
+
+            if (! $this->preview) {
+                $this->recordStepPageView($this->currentStep);
+            }
         } else {
             $this->submit();
         }
@@ -178,6 +196,8 @@ class FormFill extends Component
                 ]),
                 'completed_at' => now(),
             ]);
+
+            AnalyticsRecorder::recordCompletion($this->form->id);
 
             try {
                 TargetModelMapper::handle($this->form, $submission);
@@ -412,6 +432,21 @@ class FormFill extends Component
         }
 
         return (int) round(($this->currentStep / (count($this->steps) - 1)) * 100);
+    }
+
+    protected function recordStepPageView(int $stepIndex): void
+    {
+        $step = $this->steps[$stepIndex] ?? null;
+
+        if (! $step || $step['type'] !== 'question') {
+            return;
+        }
+
+        $pageId = $step['page_id'] ?? null;
+
+        if ($pageId) {
+            AnalyticsRecorder::recordPageView($this->form->id, $pageId);
+        }
     }
 
     protected function calculateSectionProgress(): ?array
