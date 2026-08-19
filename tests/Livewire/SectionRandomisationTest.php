@@ -148,7 +148,7 @@ it('keeps question pages in fixed order within a shuffled section', function () 
         FormField::create([
             'form_page_id' => $page->id,
             'type' => FieldType::TEXT,
-            'label' => "Q" . ($i + 1),
+            'label' => 'Q' . ($i + 1),
             'key' => "q_{$i}",
             'is_required' => false,
             'sort_order' => 0,
