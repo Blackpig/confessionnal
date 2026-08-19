@@ -630,3 +630,46 @@ it('appends captured params to redirect URL when passthrough enabled', function 
         ->call('next')
         ->assertSet('redirectUrl', 'https://example.com/done?PID=123');
 });
+
+it('completes submission even when target model mapper throws', function () {
+    $form = Form::create([
+        'name' => 'Mapper Error Form',
+        'slug' => 'mapper-error-form',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+        'settings' => [
+            'target_model' => 'App\\Models\\NonExistentModel',
+            'field_mapping' => [
+                ['field_key' => 'name', 'model_column' => 'name'],
+            ],
+        ],
+    ]);
+
+    $section = Section::create([
+        'form_id' => $form->id,
+        'title' => 'Test',
+        'sort_order' => 0,
+    ]);
+
+    $page = FormPage::create([
+        'section_id' => $section->id,
+        'sort_order' => 0,
+    ]);
+
+    FormField::create([
+        'form_page_id' => $page->id,
+        'type' => FieldType::TEXT,
+        'label' => 'Name',
+        'key' => 'name',
+        'sort_order' => 0,
+    ]);
+
+    Livewire::test(FormFill::class, ['slug' => 'mapper-error-form'])
+        ->call('next') // past intro
+        ->set('answers.name', 'Alice')
+        ->call('next') // submit
+        ->assertSet('completed', true);
+
+    expect(Submission::count())->toBe(1)
+        ->and(Submission::first()->answers['name'])->toBe('Alice');
+});

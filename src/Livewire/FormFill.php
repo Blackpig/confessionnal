@@ -179,7 +179,11 @@ class FormFill extends Component
                 'completed_at' => now(),
             ]);
 
-            TargetModelMapper::handle($this->form, $submission);
+            try {
+                TargetModelMapper::handle($this->form, $submission);
+            } catch (\Throwable $e) {
+                report($e);
+            }
 
             $redirectUrl = $this->buildRedirectUrl();
 
