@@ -1,3 +1,5 @@
+@include('confessionnal::partials.styles')
+
 <div class="confessionnal-container @if($preview) has-preview-banner @endif"
      x-data="{
         handleKey(e) {

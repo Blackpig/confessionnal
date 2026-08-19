@@ -114,6 +114,17 @@ at the end.
 13. **Multi-tenant from day one** — forms scoped per panel/tenant, following
     existing BPC conventions, so any client site can adopt it later without a
     rebuild.
+14. **Atelier block integration** — package ships an Atelier block
+    conforming to Atelier's block contract. Single config field: a form
+    select, scoped to the current tenant, listing that tenant's published
+    Forms plus the shipped default contact form as a standing option. The
+    block renders the same fill-runtime Livewire component used at the
+    standalone `/forms/{slug}/{locale}` route — no duplicated logic between
+    the embedded and standalone delivery surfaces. Follows the page's
+    current locale rather than needing its own locale setting. Layout
+    (contained vs full-width) follows Atelier's standard block-level
+    settings already set at site-design time — no bespoke display-mode
+    prop needed on the fill-runtime component itself.
 
 ## Data model — the key architectural decision
 
@@ -203,7 +214,9 @@ before continuing into the phases below.
     submission) — optional to defer past initial POC if it slows early
     testing
 13. Builder preview action
-14. Polish pass: transitions, keyboard nav, progress indicator
+14. Atelier block integration (form-select dropdown, wired into Atelier's
+    block contract and standard block layout settings)
+15. Polish pass: transitions, keyboard nav, progress indicator
 
 ## Open questions for Stuart before handing off
 

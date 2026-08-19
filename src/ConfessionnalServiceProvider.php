@@ -2,6 +2,8 @@
 
 namespace BlackpigCreatif\Confessionnal;
 
+use BlackpigCreatif\Atelier\AtelierServiceProvider;
+use BlackpigCreatif\Confessionnal\Atelier\ConfessionnalFormBlock;
 use BlackpigCreatif\Confessionnal\Commands\ConfessionnalCommand;
 use BlackpigCreatif\Confessionnal\Livewire\FormFill;
 use BlackpigCreatif\Confessionnal\Testing\TestsConfessionnal;
@@ -92,8 +94,23 @@ class ConfessionnalServiceProvider extends PackageServiceProvider
             }
         }
 
+        // Atelier block (optional integration)
+        if (class_exists(AtelierServiceProvider::class)) {
+            $this->registerAtelierBlock();
+        }
+
         // Testing
         Testable::mixin(new TestsConfessionnal);
+    }
+
+    protected function registerAtelierBlock(): void
+    {
+        config([
+            'atelier.blocks' => array_merge(
+                config('atelier.blocks', []),
+                [ConfessionnalFormBlock::class],
+            ),
+        ]);
     }
 
     protected function getAssetPackageName(): ?string
