@@ -24,7 +24,6 @@
                 id="field-{{ $key }}"
                 wire:model="answers.{{ $key }}"
                 placeholder="{{ $field['placeholder'] ?? '' }}"
-                @if($isConversational) autofocus @endif
             >
             @break
 
@@ -34,7 +33,6 @@
                 wire:model="answers.{{ $key }}"
                 placeholder="{{ $field['placeholder'] ?? '' }}"
                 rows="4"
-                @if($isConversational) autofocus @endif
             ></textarea>
             @break
 
@@ -120,7 +118,6 @@
                 type="date"
                 id="field-{{ $key }}"
                 wire:model="answers.{{ $key }}"
-                @if($isConversational) autofocus @endif
             >
             @break
 

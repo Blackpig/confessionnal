@@ -1,7 +1,14 @@
-<div class="confessionnal-container"
+<div class="confessionnal-container @if($preview) has-preview-banner @endif"
+     x-data="{
+        handleKey(e) {
+            if (e.target.tagName === 'TEXTAREA') return;
+            if (e.target.tagName === 'SELECT') return;
+            e.preventDefault();
+            $wire.next();
+        }
+     }"
      @if($isConversational)
-     x-data
-     x-on:keydown.enter.prevent="$wire.next()"
+     x-on:keydown.enter="handleKey($event)"
      @endif
 >
     @if($preview)
@@ -12,13 +19,13 @@
 
     @if($completed)
         @if($redirectUrl)
-            <div class="confessionnal-card confessionnal-complete"
+            <div class="confessionnal-card confessionnal-complete confessionnal-fade-in"
                  x-data
                  x-init="window.location.href = '{{ $redirectUrl }}'">
                 <p>Redirecting...</p>
             </div>
         @else
-            <div class="confessionnal-card confessionnal-complete">
+            <div class="confessionnal-card confessionnal-complete confessionnal-fade-in">
                 <h2>Thank you!</h2>
                 <p>Your response has been recorded.</p>
             </div>
@@ -36,7 +43,7 @@
             </div>
         </div>
 
-        <div class="confessionnal-card">
+        <div class="confessionnal-card confessionnal-step-transition" wire:key="step-{{ $currentStep }}">
             @if($step['type'] === 'intro')
                 {{-- Section interstitial --}}
                 <div class="confessionnal-intro">
@@ -50,18 +57,24 @@
 
                     <div class="confessionnal-nav" style="justify-content: center;">
                         @if($currentStep > 0)
-                            <button wire:click="previous" type="button" class="confessionnal-btn confessionnal-btn-secondary">
+                            <button wire:click="previous" wire:loading.attr="disabled" type="button" class="confessionnal-btn confessionnal-btn-secondary">
                                 Back
                             </button>
                         @endif
-                        <button wire:click="next" type="button" class="confessionnal-btn confessionnal-btn-primary">
-                            Continue
+                        <button wire:click="next" wire:loading.attr="disabled" type="button" class="confessionnal-btn confessionnal-btn-primary">
+                            <span wire:loading.remove wire:target="next">Continue</span>
+                            <span wire:loading wire:target="next">...</span>
                         </button>
                     </div>
                 </div>
             @else
                 {{-- Question step --}}
-                <form wire:submit="next">
+                <form wire:submit="next"
+                      x-data
+                      x-init="$nextTick(() => {
+                          const el = $el.querySelector('input:not([type=hidden]):not([type=radio]):not([type=checkbox]):not([type=file]), textarea, select');
+                          if (el) el.focus();
+                      })">
                     @if($step['context_image'] ?? null)
                         <div class="confessionnal-context-image">
                             <img src="{{ $step['context_image'] }}" alt="">
@@ -75,7 +88,7 @@
                     <div class="confessionnal-nav">
                         <div>
                             @if($currentStep > 0)
-                                <button wire:click="previous" type="button" class="confessionnal-btn confessionnal-btn-secondary">
+                                <button wire:click="previous" wire:loading.attr="disabled" type="button" class="confessionnal-btn confessionnal-btn-secondary">
                                     Back
                                 </button>
                             @endif
@@ -86,11 +99,13 @@
                                 <span class="confessionnal-enter-hint">press Enter &crarr;</span>
                             @endif
 
-                            <button type="submit" class="confessionnal-btn confessionnal-btn-primary">
+                            <button type="submit" wire:loading.attr="disabled" class="confessionnal-btn confessionnal-btn-primary">
                                 @if($currentStep === $totalSteps - 1)
-                                    Submit
+                                    <span wire:loading.remove wire:target="next">Submit</span>
+                                    <span wire:loading wire:target="next">...</span>
                                 @else
-                                    Next
+                                    <span wire:loading.remove wire:target="next">Next</span>
+                                    <span wire:loading wire:target="next">...</span>
                                 @endif
                             </button>
                         </div>

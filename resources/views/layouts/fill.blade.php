@@ -252,6 +252,33 @@
             font-weight: 600;
             z-index: 50;
         }
+        .confessionnal-container.has-preview-banner {
+            padding-top: 4rem;
+        }
+
+        /* Step transition */
+        @keyframes confessionnal-fade-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .confessionnal-step-transition {
+            animation: confessionnal-fade-up 0.25s ease-out;
+        }
+
+        /* Completion fade-in */
+        @keyframes confessionnal-fade-in {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .confessionnal-fade-in {
+            animation: confessionnal-fade-in 0.4s ease-out;
+        }
+
+        /* Disabled button state */
+        .confessionnal-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
