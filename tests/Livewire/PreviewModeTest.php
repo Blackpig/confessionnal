@@ -9,6 +9,7 @@ use BlackpigCreatif\Confessionnal\Models\FormPage;
 use BlackpigCreatif\Confessionnal\Models\Section;
 use BlackpigCreatif\Confessionnal\Models\Submission;
 use Illuminate\Support\Facades\URL;
+use Livewire\Livewire;
 
 function createPreviewForm(bool $published = true): Form
 {
@@ -86,7 +87,7 @@ it('does not create a submission in preview mode', function () {
     // Load via signed URL to set preview mode, then use Livewire to interact
     $this->get($url);
 
-    $component = \Livewire\Livewire::test(FormFill::class, ['slug' => 'preview-test'])
+    $component = Livewire::test(FormFill::class, ['slug' => 'preview-test'])
         ->set('preview', true);
 
     // Walk through: intro -> question -> submit
@@ -109,7 +110,7 @@ it('does not show preview banner for normal visitors', function () {
 it('creates a submission for normal (non-preview) form fills', function () {
     createPreviewForm();
 
-    $component = \Livewire\Livewire::test(FormFill::class, ['slug' => 'preview-test']);
+    $component = Livewire::test(FormFill::class, ['slug' => 'preview-test']);
 
     $component->call('next'); // past intro
     $component->set('answers.name', 'Alice');
