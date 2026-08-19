@@ -4,6 +4,12 @@
      x-on:keydown.enter.prevent="$wire.next()"
      @endif
 >
+    @if($preview)
+        <div class="confessionnal-preview-banner">
+            Preview mode — submissions will not be recorded
+        </div>
+    @endif
+
     @if($completed)
         @if($redirectUrl)
             <div class="confessionnal-card confessionnal-complete"

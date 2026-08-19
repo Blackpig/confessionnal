@@ -238,6 +238,20 @@
         .confessionnal-file-upload input[type="file"]:hover { border-color: #3b82f6; }
         .confessionnal-file-upload input[type="file"]:focus { outline: none; border-color: #3b82f6; }
         .confessionnal-file-upload .confessionnal-file-label { display: none; }
+
+        .confessionnal-preview-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #f59e0b;
+            color: #78350f;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            z-index: 50;
+        }
     </style>
 </head>
 <body>

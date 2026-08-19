@@ -43,6 +43,9 @@ class FormFill extends Component
     /** Whether the form has been submitted */
     public bool $completed = false;
 
+    /** Preview mode (no submission recorded) */
+    public bool $preview = false;
+
     /** Captured query params */
     public array $capturedParams = [];
 
@@ -54,9 +57,15 @@ class FormFill extends Component
         $this->locale = $locale ?? app()->getLocale();
         app()->setLocale($this->locale);
 
-        $this->form = Form::where('slug', $slug)
-            ->where('is_published', true)
-            ->firstOrFail();
+        $this->preview = request()->hasValidSignature() && request()->boolean('preview');
+
+        $query = Form::where('slug', $slug);
+
+        if (! $this->preview) {
+            $query->where('is_published', true);
+        }
+
+        $this->form = $query->firstOrFail();
 
         $this->captureQueryParams();
         $this->buildSteps();
@@ -155,26 +164,28 @@ class FormFill extends Component
             return;
         }
 
-        $submission = Submission::create([
-            'form_id' => $this->form->id,
-            'answers' => $this->answers,
-            'locale' => $this->locale,
-            'section_order' => $this->sectionOrder,
-            'meta' => array_filter([
-                'ip' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'referrer' => request()->header('referer'),
-                'query_params' => $this->capturedParams ?: null,
-            ]),
-            'completed_at' => now(),
-        ]);
+        if (! $this->preview) {
+            $submission = Submission::create([
+                'form_id' => $this->form->id,
+                'answers' => $this->answers,
+                'locale' => $this->locale,
+                'section_order' => $this->sectionOrder,
+                'meta' => array_filter([
+                    'ip' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'referrer' => request()->header('referer'),
+                    'query_params' => $this->capturedParams ?: null,
+                ]),
+                'completed_at' => now(),
+            ]);
 
-        TargetModelMapper::handle($this->form, $submission);
+            TargetModelMapper::handle($this->form, $submission);
 
-        $redirectUrl = $this->buildRedirectUrl();
+            $redirectUrl = $this->buildRedirectUrl();
 
-        if ($redirectUrl) {
-            $this->redirectUrl = $redirectUrl;
+            if ($redirectUrl) {
+                $this->redirectUrl = $redirectUrl;
+            }
         }
 
         $this->completed = true;
