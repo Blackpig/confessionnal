@@ -28,7 +28,7 @@ class SubmissionCsvExport
                 $row = [$submission->id];
 
                 foreach ($fields as $field) {
-                    $value = $submission->answers[$field->key] ?? '';
+                    $value = $submission->answers[$field['key']] ?? '';
 
                     if (is_array($value)) {
                         $value = implode(', ', $value);
@@ -50,18 +50,41 @@ class SubmissionCsvExport
         ]);
     }
 
+    /**
+     * Get fields with section context for header generation.
+     *
+     * Returns a collection of arrays with 'key', 'label', and 'section_title'.
+     */
     protected static function getFields(Form $form): Collection
     {
+        $locale = app()->getLocale();
+
         return $form->sections()
             ->with(['pages.fields'])
             ->get()
-            ->flatMap(fn ($section) => $section->pages)
-            ->flatMap(fn ($page) => $page->fields);
+            ->flatMap(fn ($section) => $section->pages->flatMap(
+                fn ($page) => $page->fields->map(fn (FormField $field) => [
+                    'key' => $field->key,
+                    'label' => $field->getTranslation('label', $locale),
+                    'section_title' => $section->getTranslation('title', $locale),
+                ]),
+            ));
     }
 
     protected static function fieldHeaders(Collection $fields): array
     {
-        return $fields->map(fn (FormField $field) => $field->getTranslation('label', app()->getLocale()))
-            ->toArray();
+        $labels = $fields->pluck('label');
+        $hasDuplicateLabels = $labels->count() !== $labels->unique()->count();
+
+        $sectionCount = $fields->pluck('section_title')->unique()->count();
+        $prefixWithSection = $hasDuplicateLabels && $sectionCount > 1;
+
+        return $fields->map(function (array $field) use ($prefixWithSection) {
+            if ($prefixWithSection && $field['section_title']) {
+                return $field['section_title'] . ' - ' . $field['label'];
+            }
+
+            return $field['label'];
+        })->toArray();
     }
 }

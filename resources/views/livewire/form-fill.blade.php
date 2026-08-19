@@ -5,14 +5,29 @@
      @endif
 >
     @if($completed)
-        <div class="confessionnal-card confessionnal-complete">
-            <h2>Thank you!</h2>
-            <p>Your response has been recorded.</p>
-        </div>
+        @if($redirectUrl)
+            <div class="confessionnal-card confessionnal-complete"
+                 x-data
+                 x-init="window.location.href = '{{ $redirectUrl }}'">
+                <p>Redirecting...</p>
+            </div>
+        @else
+            <div class="confessionnal-card confessionnal-complete">
+                <h2>Thank you!</h2>
+                <p>Your response has been recorded.</p>
+            </div>
+        @endif
     @elseif($step)
-        {{-- Progress bar --}}
-        <div class="confessionnal-progress">
-            <div class="confessionnal-progress-bar" style="width: {{ $progress }}%"></div>
+        {{-- Progress --}}
+        <div class="confessionnal-progress-wrapper">
+            @if($sectionProgress)
+                <div class="confessionnal-section-indicator">
+                    Section {{ $sectionProgress['current'] }} of {{ $sectionProgress['total'] }}
+                </div>
+            @endif
+            <div class="confessionnal-progress">
+                <div class="confessionnal-progress-bar" style="width: {{ $progress }}%"></div>
+            </div>
         </div>
 
         <div class="confessionnal-card">
@@ -41,6 +56,12 @@
             @else
                 {{-- Question step --}}
                 <form wire:submit="next">
+                    @if($step['context_image'] ?? null)
+                        <div class="confessionnal-context-image">
+                            <img src="{{ $step['context_image'] }}" alt="">
+                        </div>
+                    @endif
+
                     @foreach($step['fields'] as $field)
                         @include('confessionnal::partials.field', ['field' => $field])
                     @endforeach

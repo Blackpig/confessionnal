@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('confessionnal_form_pages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('section_id')->constrained('confessionnal_sections')->cascadeOnDelete();
+            $table->json('context_image')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });

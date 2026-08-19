@@ -2,6 +2,7 @@
 
 namespace BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\RelationManagers;
 
+use BlackpigCreatif\ChambreNoir\Forms\Components\RetouchMediaUpload;
 use BlackpigCreatif\Confessionnal\Enums\FieldType;
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource;
 use Filament\Actions;
@@ -49,6 +50,17 @@ class SectionsRelationManager extends RelationManager
                         ->relationship()
                         ->orderColumn('sort_order')
                         ->schema([
+                            RetouchMediaUpload::make('context_image')
+                                ->label('Reference image')
+                                ->helperText('Optional image displayed alongside questions on this page')
+                                ->image()
+                                ->disk('public')
+                                ->directory('confessionnal/context-images')
+                                ->conversions([
+                                    'medium' => ['width' => 640, 'height' => 480, 'fit' => 'scale-down'],
+                                    'large' => ['width' => 1280, 'height' => 960, 'fit' => 'scale-down'],
+                                ])
+                                ->columnSpanFull(),
                             Repeater::make('fields')
                                 ->relationship()
                                 ->orderColumn('sort_order')
@@ -249,24 +261,46 @@ class SectionsRelationManager extends RelationManager
                     ->icon('heroicon-o-document-duplicate')
                     ->requiresConfirmation()
                     ->action(function (\BlackpigCreatif\Confessionnal\Models\Section $record) {
+                        $form = $record->form;
+
+                        // Collect all existing field keys across the form
+                        $existingKeys = $form->sections()
+                            ->with('pages.fields')
+                            ->get()
+                            ->flatMap(fn ($s) => $s->pages)
+                            ->flatMap(fn ($p) => $p->fields)
+                            ->pluck('key')
+                            ->toArray();
+
                         $clone = $record->replicate(['id', 'pages_count']);
                         $clone->title = $record->getTranslation('title', app()->getLocale()) . ' (copy)';
-                        $clone->sort_order = $record->form->sections()->max('sort_order') + 1;
+                        $clone->sort_order = $form->sections()->max('sort_order') + 1;
                         $clone->save();
 
                         $record->load('pages.fields');
 
                         foreach ($record->pages as $page) {
                             $clonedPage = $clone->pages()->create(
-                                $page->only(['sort_order']),
+                                $page->only(['sort_order', 'context_image']),
                             );
 
                             foreach ($page->fields as $field) {
-                                $clonedPage->fields()->create(
-                                    collect($field->toArray())
-                                        ->except(['id', 'form_page_id', 'created_at', 'updated_at'])
-                                        ->toArray(),
-                                );
+                                $data = collect($field->toArray())
+                                    ->except(['id', 'form_page_id', 'created_at', 'updated_at'])
+                                    ->toArray();
+
+                                // Make key unique
+                                $baseKey = $data['key'];
+                                $suffix = 2;
+
+                                while (in_array($data['key'], $existingKeys)) {
+                                    $data['key'] = "{$baseKey}_{$suffix}";
+                                    $suffix++;
+                                }
+
+                                $existingKeys[] = $data['key'];
+
+                                $clonedPage->fields()->create($data);
                             }
                         }
 

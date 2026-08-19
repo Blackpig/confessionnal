@@ -56,7 +56,7 @@ class SubmissionsRelationManager extends RelationManager
                     ->modalHeading('Submission Details')
                     ->modalContent(fn ($record) => view('confessionnal::filament.submission-detail', [
                         'submission' => $record,
-                        'fields' => $this->getFormFields(),
+                        'sections' => $this->getFormFieldsBySection(),
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close'),
@@ -99,5 +99,13 @@ class SubmissionsRelationManager extends RelationManager
             ->get()
             ->flatMap(fn ($section) => $section->pages)
             ->flatMap(fn ($page) => $page->fields);
+    }
+
+    protected function getFormFieldsBySection(): Collection
+    {
+        return $this->getOwnerRecord()
+            ->sections()
+            ->with(['pages.fields'])
+            ->get();
     }
 }

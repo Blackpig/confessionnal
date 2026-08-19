@@ -33,13 +33,24 @@
             max-width: 640px;
         }
 
-        .confessionnal-progress {
+        .confessionnal-progress-wrapper {
             width: 100%;
             max-width: 640px;
+            margin-bottom: 2rem;
+        }
+
+        .confessionnal-section-indicator {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: right;
+            margin-bottom: 0.375rem;
+        }
+
+        .confessionnal-progress {
+            width: 100%;
             height: 4px;
             background: #e2e8f0;
             border-radius: 2px;
-            margin-bottom: 2rem;
             overflow: hidden;
         }
 
@@ -53,6 +64,17 @@
         .confessionnal-intro { text-align: center; }
         .confessionnal-intro h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; }
         .confessionnal-intro p { color: #64748b; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
+
+        .confessionnal-context-image {
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .confessionnal-context-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
         .confessionnal-field { margin-bottom: 1.5rem; }
         .confessionnal-field label {

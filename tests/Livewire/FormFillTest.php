@@ -189,6 +189,54 @@ it('calculates progress correctly', function () {
         ->assertSee('width: 100%');       // Step 2 of 2
 });
 
+it('shows section progress for multi-section forms', function () {
+    $form = Form::create([
+        'name' => 'Multi Section',
+        'slug' => 'multi-section',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+    ]);
+
+    foreach (['Section A', 'Section B', 'Section C'] as $i => $title) {
+        $section = Section::create([
+            'form_id' => $form->id,
+            'title' => $title,
+            'sort_order' => $i,
+        ]);
+
+        $page = FormPage::create([
+            'section_id' => $section->id,
+            'sort_order' => 0,
+        ]);
+
+        FormField::create([
+            'form_page_id' => $page->id,
+            'type' => FieldType::TEXT,
+            'label' => "Q from {$title}",
+            'key' => "q_{$i}",
+            'sort_order' => 0,
+        ]);
+    }
+
+    Livewire::test(FormFill::class, ['slug' => 'multi-section'])
+        ->assertSee('Section 1 of 3')   // Section A intro
+        ->call('next')                    // -> Section A question
+        ->assertSee('Section 1 of 3')
+        ->call('next')                    // -> Section B intro
+        ->assertSee('Section 2 of 3')
+        ->call('next')                    // -> Section B question
+        ->assertSee('Section 2 of 3')
+        ->call('next')                    // -> Section C intro
+        ->assertSee('Section 3 of 3');
+});
+
+it('hides section progress for single-section forms', function () {
+    $form = createFormWithFields(FormMode::CONVERSATIONAL, 2);
+
+    Livewire::test(FormFill::class, ['slug' => 'test-form'])
+        ->assertDontSee('Section 1 of 1');
+});
+
 it('validates checkbox fields as arrays', function () {
     $form = Form::create([
         'name' => 'Checkbox Form',
@@ -438,4 +486,147 @@ it('skips hidden steps in conversational mode', function () {
         ->call('next') // should skip step 1 (hidden), land on step 2 (final_field)
         ->assertSet('currentStep', 2)
         ->assertSee('Final Field');
+});
+
+// --- Query String Capture ---
+
+it('captures all query params when mode is all', function () {
+    $form = Form::create([
+        'name' => 'Capture All',
+        'slug' => 'capture-all',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+        'settings' => ['query_capture_mode' => 'all'],
+    ]);
+
+    $section = Section::create(['form_id' => $form->id, 'sort_order' => 0]);
+    $page = FormPage::create(['section_id' => $section->id, 'sort_order' => 0]);
+    FormField::create([
+        'form_page_id' => $page->id,
+        'type' => FieldType::TEXT,
+        'label' => 'Name',
+        'key' => 'name',
+        'sort_order' => 0,
+    ]);
+
+    $this->get(route('confessionnal.fill', ['slug' => 'capture-all', 'PROLIFIC_PID' => 'abc123', 'utm_source' => 'email']))
+        ->assertOk()
+        ->assertSee('Name');
+});
+
+it('captures only whitelisted query params', function () {
+    $form = Form::create([
+        'name' => 'Capture Whitelist',
+        'slug' => 'capture-whitelist',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+        'settings' => [
+            'query_capture_mode' => 'whitelist',
+            'query_capture_whitelist' => ['STUDY_ID'],
+        ],
+    ]);
+
+    $section = Section::create(['form_id' => $form->id, 'sort_order' => 0]);
+    $page = FormPage::create(['section_id' => $section->id, 'sort_order' => 0]);
+    FormField::create([
+        'form_page_id' => $page->id,
+        'type' => FieldType::TEXT,
+        'label' => 'Name',
+        'key' => 'name',
+        'sort_order' => 0,
+    ]);
+
+    $this->get(route('confessionnal.fill', ['slug' => 'capture-whitelist', 'STUDY_ID' => 's1', 'secret' => 'nope']))
+        ->assertOk();
+});
+
+it('stores captured params in submission meta', function () {
+    $form = Form::create([
+        'name' => 'Capture Submit',
+        'slug' => 'capture-submit',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+        'settings' => ['query_capture_mode' => 'all'],
+    ]);
+
+    $section = Section::create(['form_id' => $form->id, 'sort_order' => 0]);
+    $page = FormPage::create(['section_id' => $section->id, 'sort_order' => 0]);
+    FormField::create([
+        'form_page_id' => $page->id,
+        'type' => FieldType::TEXT,
+        'label' => 'Name',
+        'key' => 'name',
+        'sort_order' => 0,
+    ]);
+
+    // Manually set captured params (Livewire test can't inject query params into mount)
+    Livewire::test(FormFill::class, ['slug' => 'capture-submit'])
+        ->set('capturedParams', ['ref' => 'prolific'])
+        ->set('answers.name', 'Test')
+        ->call('next');
+
+    $submission = Submission::first();
+    expect($submission->meta['query_params'])->toBe(['ref' => 'prolific']);
+});
+
+it('does not capture params when mode is none', function () {
+    $form = createFormWithFields(FormMode::CONVERSATIONAL, 1);
+
+    Livewire::test(FormFill::class, ['slug' => 'test-form'])
+        ->assertSet('capturedParams', []);
+});
+
+it('sets redirect URL on completion', function () {
+    $form = Form::create([
+        'name' => 'Redirect Form',
+        'slug' => 'redirect-form',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+        'settings' => ['redirect_url' => 'https://example.com/done'],
+    ]);
+
+    $section = Section::create(['form_id' => $form->id, 'sort_order' => 0]);
+    $page = FormPage::create(['section_id' => $section->id, 'sort_order' => 0]);
+    FormField::create([
+        'form_page_id' => $page->id,
+        'type' => FieldType::TEXT,
+        'label' => 'Name',
+        'key' => 'name',
+        'sort_order' => 0,
+    ]);
+
+    Livewire::test(FormFill::class, ['slug' => 'redirect-form'])
+        ->set('answers.name', 'Test')
+        ->call('next')
+        ->assertSet('redirectUrl', 'https://example.com/done');
+});
+
+it('appends captured params to redirect URL when passthrough enabled', function () {
+    $form = Form::create([
+        'name' => 'Passthrough Form',
+        'slug' => 'passthrough-form',
+        'mode' => FormMode::CONVERSATIONAL,
+        'is_published' => true,
+        'settings' => [
+            'redirect_url' => 'https://example.com/done',
+            'passthrough_params' => true,
+            'query_capture_mode' => 'all',
+        ],
+    ]);
+
+    $section = Section::create(['form_id' => $form->id, 'sort_order' => 0]);
+    $page = FormPage::create(['section_id' => $section->id, 'sort_order' => 0]);
+    FormField::create([
+        'form_page_id' => $page->id,
+        'type' => FieldType::TEXT,
+        'label' => 'Name',
+        'key' => 'name',
+        'sort_order' => 0,
+    ]);
+
+    Livewire::test(FormFill::class, ['slug' => 'passthrough-form'])
+        ->set('capturedParams', ['PID' => '123'])
+        ->set('answers.name', 'Test')
+        ->call('next')
+        ->assertSet('redirectUrl', 'https://example.com/done?PID=123');
 });

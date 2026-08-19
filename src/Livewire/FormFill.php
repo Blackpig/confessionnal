@@ -43,6 +43,12 @@ class FormFill extends Component
     /** Whether the form has been submitted */
     public bool $completed = false;
 
+    /** Captured query params */
+    public array $capturedParams = [];
+
+    /** Redirect URL after submission (if set) */
+    public ?string $redirectUrl = null;
+
     public function mount(string $slug, ?string $locale = null): void
     {
         $this->locale = $locale ?? app()->getLocale();
@@ -52,6 +58,7 @@ class FormFill extends Component
             ->where('is_published', true)
             ->firstOrFail();
 
+        $this->captureQueryParams();
         $this->buildSteps();
     }
 
@@ -71,6 +78,7 @@ class FormFill extends Component
             'step' => $step,
             'totalSteps' => count($this->steps),
             'progress' => $this->calculateProgress(),
+            'sectionProgress' => $this->calculateSectionProgress(),
             'isConversational' => $this->form->mode === FormMode::CONVERSATIONAL,
         ]);
     }
@@ -152,15 +160,22 @@ class FormFill extends Component
             'answers' => $this->answers,
             'locale' => $this->locale,
             'section_order' => $this->sectionOrder,
-            'meta' => [
+            'meta' => array_filter([
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'referrer' => request()->header('referer'),
-            ],
+                'query_params' => $this->capturedParams ?: null,
+            ]),
             'completed_at' => now(),
         ]);
 
         TargetModelMapper::handle($this->form, $submission);
+
+        $redirectUrl = $this->buildRedirectUrl();
+
+        if ($redirectUrl) {
+            $this->redirectUrl = $redirectUrl;
+        }
 
         $this->completed = true;
     }
@@ -238,6 +253,45 @@ class FormFill extends Component
         return $rules;
     }
 
+    protected function captureQueryParams(): void
+    {
+        $settings = $this->form->settings ?? [];
+        $mode = $settings['query_capture_mode'] ?? 'none';
+
+        if ($mode === 'none') {
+            return;
+        }
+
+        $params = request()->query();
+
+        // Remove the route params (slug, locale) from captured params
+        unset($params['slug'], $params['locale']);
+
+        if ($mode === 'whitelist') {
+            $allowed = $settings['query_capture_whitelist'] ?? [];
+            $params = array_intersect_key($params, array_flip($allowed));
+        }
+
+        $this->capturedParams = $params;
+    }
+
+    protected function buildRedirectUrl(): ?string
+    {
+        $settings = $this->form->settings ?? [];
+        $url = $settings['redirect_url'] ?? null;
+
+        if (! $url) {
+            return null;
+        }
+
+        if (! empty($settings['passthrough_params']) && ! empty($this->capturedParams)) {
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $url .= $separator . http_build_query($this->capturedParams);
+        }
+
+        return $url;
+    }
+
     protected function buildSteps(): void
     {
         $sections = $this->form->sections()
@@ -279,6 +333,8 @@ class FormFill extends Component
                     'conditional_logic' => $field->conditional_logic,
                 ])->toArray();
 
+                $contextImage = $page->getMediaUrl('context_image', 'large');
+
                 if ($this->form->mode === FormMode::CONVERSATIONAL) {
                     // One field per step in conversational mode
                     foreach ($fields as $field) {
@@ -286,6 +342,7 @@ class FormFill extends Component
                             'type' => 'question',
                             'section_id' => $section->id,
                             'page_id' => $page->id,
+                            'context_image' => $contextImage,
                             'fields' => [$field],
                         ];
                     }
@@ -296,6 +353,7 @@ class FormFill extends Component
                             'type' => 'question',
                             'section_id' => $section->id,
                             'page_id' => $page->id,
+                            'context_image' => $contextImage,
                             'fields' => $fields,
                         ];
                     }
@@ -339,5 +397,29 @@ class FormFill extends Component
         }
 
         return (int) round(($this->currentStep / (count($this->steps) - 1)) * 100);
+    }
+
+    protected function calculateSectionProgress(): ?array
+    {
+        $sectionIds = collect($this->steps)
+            ->pluck('section_id')
+            ->unique()
+            ->values();
+
+        if ($sectionIds->count() <= 1) {
+            return null;
+        }
+
+        $currentSectionId = $this->steps[$this->currentStep]['section_id'] ?? null;
+        $currentIndex = $sectionIds->search($currentSectionId);
+
+        if ($currentIndex === false) {
+            return null;
+        }
+
+        return [
+            'current' => $currentIndex + 1,
+            'total' => $sectionIds->count(),
+        ];
     }
 }

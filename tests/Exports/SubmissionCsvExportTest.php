@@ -146,6 +146,76 @@ it('exports empty CSV with only headers when no submissions', function () {
         ->and($rows[0][0])->toBe('#');
 });
 
+it('prefixes headers with section title when labels are duplicated across sections', function () {
+    $form = Form::create([
+        'name' => 'Multi Section Export',
+        'slug' => 'multi-section-export',
+        'mode' => FormMode::STANDARD,
+        'is_published' => true,
+    ]);
+
+    foreach (['Brand A', 'Brand B'] as $i => $title) {
+        $section = Section::create([
+            'form_id' => $form->id,
+            'title' => $title,
+            'sort_order' => $i,
+        ]);
+
+        $page = FormPage::create([
+            'section_id' => $section->id,
+            'sort_order' => 0,
+        ]);
+
+        FormField::create([
+            'form_page_id' => $page->id,
+            'type' => FieldType::TEXT,
+            'label' => 'Rating',
+            'key' => $i === 0 ? 'rating' : 'rating_2',
+            'sort_order' => 0,
+        ]);
+    }
+
+    $response = SubmissionCsvExport::download($form);
+    $rows = parseCsvResponse($response);
+
+    expect($rows[0])->toBe(['#', 'Brand A - Rating', 'Brand B - Rating', 'Locale', 'Completed At', 'Created At']);
+});
+
+it('does not prefix headers when labels are unique across sections', function () {
+    $form = Form::create([
+        'name' => 'Unique Labels Export',
+        'slug' => 'unique-labels-export',
+        'mode' => FormMode::STANDARD,
+        'is_published' => true,
+    ]);
+
+    foreach (['Part 1', 'Part 2'] as $i => $title) {
+        $section = Section::create([
+            'form_id' => $form->id,
+            'title' => $title,
+            'sort_order' => $i,
+        ]);
+
+        $page = FormPage::create([
+            'section_id' => $section->id,
+            'sort_order' => 0,
+        ]);
+
+        FormField::create([
+            'form_page_id' => $page->id,
+            'type' => FieldType::TEXT,
+            'label' => $i === 0 ? 'Name' : 'Email',
+            'key' => $i === 0 ? 'name' : 'email',
+            'sort_order' => 0,
+        ]);
+    }
+
+    $response = SubmissionCsvExport::download($form);
+    $rows = parseCsvResponse($response);
+
+    expect($rows[0])->toBe(['#', 'Name', 'Email', 'Locale', 'Completed At', 'Created At']);
+});
+
 it('names the file using the form slug and date', function () {
     $form = createExportableForm();
 

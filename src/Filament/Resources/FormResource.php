@@ -12,6 +12,7 @@ use Filament\Actions;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -62,6 +63,33 @@ class FormResource extends Resource
                                 ->label('Published'),
                             DateTimePicker::make('published_at')
                                 ->label('Publish date'),
+                        ]),
+                    Tabs\Tab::make('Completion')
+                        ->schema([
+                            TextInput::make('settings.redirect_url')
+                                ->label('Redirect URL')
+                                ->url()
+                                ->helperText('Redirect respondent here after submission instead of showing thank-you screen. Leave blank for default.'),
+                            Toggle::make('settings.passthrough_params')
+                                ->label('Pass query params to redirect URL')
+                                ->helperText('Append captured query params to the redirect URL.'),
+                        ]),
+                    Tabs\Tab::make('Query Capture')
+                        ->schema([
+                            Select::make('settings.query_capture_mode')
+                                ->label('Capture mode')
+                                ->options([
+                                    'none' => 'None',
+                                    'all' => 'Capture all query params',
+                                    'whitelist' => 'Capture specific params only',
+                                ])
+                                ->default('none')
+                                ->live(),
+                            TagsInput::make('settings.query_capture_whitelist')
+                                ->label('Allowed params')
+                                ->helperText('e.g. PROLIFIC_PID, STUDY_ID, utm_source')
+                                ->placeholder('Add param name')
+                                ->visible(fn (Get $get): bool => $get('settings.query_capture_mode') === 'whitelist'),
                         ]),
                     Tabs\Tab::make('Target Model')
                         ->schema([
