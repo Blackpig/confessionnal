@@ -98,3 +98,9 @@ The **Preview** button on the Form edit page generates a signed URL that opens t
 When a form has multiple sections, a **"Section X of Y"** indicator appears above the progress bar. For single-section forms, only the progress bar is shown.
 
 Progress is calculated as a percentage of steps completed, not fields answered.
+
+## Analytics
+
+Confessionnal tracks views, starts, completions, and per-page views in daily aggregate tables. A stats widget appears on the form edit page showing totals and conversion rates.
+
+See [analytics.md](analytics.md) for database schema, querying analytics in code, and drop-off analysis.

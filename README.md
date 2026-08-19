@@ -13,7 +13,9 @@ A conversational form and survey builder for [Filament v5](https://filamentphp.c
 - **CSV export** with section-prefixed headers for duplicate labels
 - **Query string capture** for panel-recruitment services (Prolific, etc.)
 - **Completion redirect** with param passthrough
+- **Lightweight analytics**: views, starts, completions, and per-page drop-off tracked in daily aggregate tables
 - **Preview mode** via signed URL from the admin panel
+- **Atelier block integration**: embed forms on Atelier-managed pages (optional, no hard dependency)
 - **Themeable** via CSS custom properties (no build step needed)
 
 ## Installation
@@ -84,6 +86,7 @@ See [docs/theming.md](docs/theming.md) for the complete variable reference and e
 | Submissions and CSV export | [docs/submissions.md](docs/submissions.md) |
 | Target model mapping | [docs/target-model-mapping.md](docs/target-model-mapping.md) |
 | Theming and CSS variables | [docs/theming.md](docs/theming.md) |
+| Analytics and drop-off tracking | [docs/analytics.md](docs/analytics.md) |
 | Conditional logic, randomisation, query capture, preview | [docs/advanced.md](docs/advanced.md) |
 
 ## Testing
