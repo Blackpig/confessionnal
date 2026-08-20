@@ -223,6 +223,25 @@
     .confessionnal-complete h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; }
     .confessionnal-complete p { color: var(--cfnl-color-muted); font-size: 1.1rem; }
 
+    .confessionnal-completion-code {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: var(--cfnl-primary-light);
+        border-radius: var(--cfnl-input-radius);
+    }
+    .confessionnal-completion-code p {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+    .confessionnal-completion-code code {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        color: var(--cfnl-color);
+        user-select: all;
+    }
+
     .confessionnal-scale {
         display: flex;
         gap: 0.5rem;

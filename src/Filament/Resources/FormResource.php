@@ -76,12 +76,55 @@ class FormResource extends Resource
                     Tabs\Tab::make('Completion')
                         ->schema([
                             TextInput::make('settings.redirect_url')
-                                ->label('Redirect URL')
+                                ->label('Default redirect URL')
                                 ->url()
-                                ->helperText('Redirect respondent here after submission instead of showing thank-you screen. Leave blank for default.'),
+                                ->helperText('Redirect respondent here after submission when no panel provider is matched. Leave blank for thank-you screen.'),
                             Toggle::make('settings.passthrough_params')
                                 ->label('Pass query params to redirect URL')
                                 ->helperText('Append captured query params to the redirect URL.'),
+                            Repeater::make('settings.completion_providers')
+                                ->label('Panel providers')
+                                ->helperText('Configure provider-specific completion handling. Respondents are matched by the presence of a query parameter.')
+                                ->schema([
+                                    TextInput::make('name')
+                                        ->label('Provider name')
+                                        ->placeholder('e.g. Prolific, Cint, Toluna')
+                                        ->required(),
+                                    TextInput::make('detect_param')
+                                        ->label('Detect by query parameter')
+                                        ->placeholder('e.g. PROLIFIC_PID, rid')
+                                        ->helperText('If this parameter is present in the URL, this provider is matched.')
+                                        ->required(),
+                                    TextInput::make('redirect_url')
+                                        ->label('Redirect URL')
+                                        ->url()
+                                        ->placeholder('e.g. https://app.prolific.com/submissions/complete'),
+                                    Toggle::make('passthrough_params')
+                                        ->label('Pass query params to redirect URL')
+                                        ->default(true),
+                                    Select::make('code_type')
+                                        ->label('Completion code')
+                                        ->options([
+                                            'none' => 'No code',
+                                            'static' => 'Static code (same for all respondents)',
+                                            'dynamic' => 'Dynamic code (unique per submission)',
+                                        ])
+                                        ->default('none')
+                                        ->live(),
+                                    TextInput::make('static_code')
+                                        ->label('Code')
+                                        ->visible(fn (Get $get): bool => $get('code_type') === 'static')
+                                        ->required(fn (Get $get): bool => $get('code_type') === 'static'),
+                                    TextInput::make('code_param_key')
+                                        ->label('Code parameter key')
+                                        ->placeholder('e.g. cc, code')
+                                        ->helperText('Query parameter name for appending the code to the redirect URL.')
+                                        ->visible(fn (Get $get): bool => in_array($get('code_type'), ['static', 'dynamic'])),
+                                ])
+                                ->collapsible()
+                                ->collapsed()
+                                ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'New provider')
+                                ->defaultItems(0),
                         ]),
                     Tabs\Tab::make('Query Capture')
                         ->schema([

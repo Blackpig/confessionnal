@@ -28,6 +28,12 @@
             <div class="confessionnal-card confessionnal-complete confessionnal-fade-in">
                 <h2>Thank you!</h2>
                 <p>Your response has been recorded.</p>
+                @if($completionCode)
+                    <div class="confessionnal-completion-code">
+                        <p>Your completion code:</p>
+                        <code>{{ $completionCode }}</code>
+                    </div>
+                @endif
             </div>
         @endif
     @elseif($step)

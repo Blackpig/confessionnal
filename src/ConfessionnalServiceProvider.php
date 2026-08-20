@@ -177,6 +177,7 @@ class ConfessionnalServiceProvider extends PackageServiceProvider
             'create_confessionnal_submissions_table',
             'create_confessionnal_form_analytics_table',
             'create_confessionnal_page_analytics_table',
+            'add_completion_code_to_confessionnal_submissions_table',
         ];
     }
 }

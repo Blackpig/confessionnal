@@ -53,6 +53,12 @@ class FormFill extends Component
     /** Redirect URL after submission (if set) */
     public ?string $redirectUrl = null;
 
+    /** Completion code to display on thank-you screen */
+    public ?string $completionCode = null;
+
+    /** Matched completion provider config (if any) */
+    public ?array $matchedProvider = null;
+
     /** Whether the respondent has advanced past the first step */
     public bool $hasStarted = false;
 
@@ -76,6 +82,9 @@ class FormFill extends Component
 
         // Resolve progress bar visibility: explicit override > form setting > default (true)
         $this->showProgress = $showProgress ?? ($this->form->settings['show_progress'] ?? true);
+
+        // Detect completion provider from query params (must happen on initial request)
+        $this->matchedProvider = $this->detectCompletionProvider();
 
         $this->captureQueryParams();
         $this->buildSteps();
@@ -189,16 +198,20 @@ class FormFill extends Component
         }
 
         if (! $this->preview) {
+            $completionCode = $this->generateCompletionCode($this->matchedProvider);
+
             $submission = Submission::create([
                 'form_id' => $this->form->id,
                 'answers' => $this->answers,
                 'locale' => $this->locale,
                 'section_order' => $this->sectionOrder,
+                'completion_code' => $completionCode,
                 'meta' => array_filter([
                     'ip' => request()->ip(),
                     'user_agent' => request()->userAgent(),
                     'referrer' => request()->header('referer'),
                     'query_params' => $this->capturedParams ?: null,
+                    'provider' => $this->matchedProvider['name'] ?? null,
                 ]),
                 'completed_at' => now(),
             ]);
@@ -211,10 +224,14 @@ class FormFill extends Component
                 report($e);
             }
 
-            $redirectUrl = $this->buildRedirectUrl();
+            $redirectUrl = $this->buildRedirectUrl($this->matchedProvider, $completionCode);
 
             if ($redirectUrl) {
                 $this->redirectUrl = $redirectUrl;
+            }
+
+            if ($completionCode && ! $redirectUrl) {
+                $this->completionCode = $completionCode;
             }
         }
 
@@ -316,16 +333,62 @@ class FormFill extends Component
         $this->capturedParams = $params;
     }
 
-    protected function buildRedirectUrl(): ?string
+    protected function detectCompletionProvider(): ?array
+    {
+        $providers = $this->form->settings['completion_providers'] ?? [];
+        $queryParams = request()->query();
+
+        foreach ($providers as $provider) {
+            $detectParam = $provider['detect_param'] ?? null;
+
+            if ($detectParam && array_key_exists($detectParam, $queryParams)) {
+                return $provider;
+            }
+        }
+
+        return null;
+    }
+
+    protected function generateCompletionCode(?array $provider): ?string
+    {
+        if (! $provider) {
+            return null;
+        }
+
+        $codeType = $provider['code_type'] ?? 'none';
+
+        return match ($codeType) {
+            'static' => $provider['static_code'] ?? null,
+            'dynamic' => strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)),
+            default => null,
+        };
+    }
+
+    protected function buildRedirectUrl(?array $provider = null, ?string $completionCode = null): ?string
     {
         $settings = $this->form->settings ?? [];
-        $url = $settings['redirect_url'] ?? null;
+
+        // Provider-specific redirect takes priority
+        if ($provider && ! empty($provider['redirect_url'])) {
+            $url = $provider['redirect_url'];
+            $passthrough = $provider['passthrough_params'] ?? false;
+        } else {
+            $url = $settings['redirect_url'] ?? null;
+            $passthrough = ! empty($settings['passthrough_params']);
+        }
 
         if (! $url) {
             return null;
         }
 
-        if (! empty($settings['passthrough_params']) && ! empty($this->capturedParams)) {
+        // Append completion code
+        if ($completionCode && ! empty($provider['code_param_key'])) {
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $url .= $separator . urlencode($provider['code_param_key']) . '=' . urlencode($completionCode);
+        }
+
+        // Append captured query params
+        if ($passthrough && ! empty($this->capturedParams)) {
             $separator = str_contains($url, '?') ? '&' : '?';
             $url .= $separator . http_build_query($this->capturedParams);
         }
