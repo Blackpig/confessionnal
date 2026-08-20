@@ -56,7 +56,10 @@ class FormFill extends Component
     /** Whether the respondent has advanced past the first step */
     public bool $hasStarted = false;
 
-    public function mount(string $slug, ?string $locale = null): void
+    /** Whether to show the progress bar (nullable until resolved in mount) */
+    public ?bool $showProgress = null;
+
+    public function mount(string $slug, ?string $locale = null, ?bool $showProgress = null): void
     {
         $this->locale = $locale ?? app()->getLocale();
         app()->setLocale($this->locale);
@@ -70,6 +73,9 @@ class FormFill extends Component
         }
 
         $this->form = $query->firstOrFail();
+
+        // Resolve progress bar visibility: explicit override > form setting > default (true)
+        $this->showProgress = $showProgress ?? ($this->form->settings['show_progress'] ?? true);
 
         $this->captureQueryParams();
         $this->buildSteps();

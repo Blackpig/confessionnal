@@ -58,6 +58,14 @@ class FormResource extends Resource
                                 ->required()
                                 ->default(FormMode::CONVERSATIONAL),
                         ]),
+                    Tabs\Tab::make('Display')
+                        ->schema([
+                            Toggle::make('settings.show_progress')
+                                ->label('Show progress bar')
+                                ->helperText('Display the progress bar and section indicator during form fill.')
+                                ->default(true)
+                                ->formatStateUsing(fn ($state) => $state ?? true),
+                        ]),
                     Tabs\Tab::make('Publishing')
                         ->schema([
                             Toggle::make('is_published')

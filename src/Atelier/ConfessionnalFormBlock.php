@@ -40,6 +40,15 @@ class ConfessionnalFormBlock extends BaseBlock
                 ->required()
                 ->searchable(),
 
+            Select::make('show_progress')
+                ->label('Progress bar')
+                ->options([
+                    'default' => 'Use form setting',
+                    'show' => 'Show',
+                    'hide' => 'Hide',
+                ])
+                ->default('default'),
+
             ...static::getCommonOptionsSchema(),
         ];
     }
@@ -53,9 +62,16 @@ class ConfessionnalFormBlock extends BaseBlock
     {
         $form = Form::find($this->get('form_id'));
 
+        $showProgress = match ($this->get('show_progress', 'default')) {
+            'show' => true,
+            'hide' => false,
+            default => null,
+        };
+
         return view(static::getViewPath(), array_merge($this->getViewData(), [
             'form' => $form,
             'slug' => $form?->slug,
+            'showProgress' => $showProgress,
         ]));
     }
 }

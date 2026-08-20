@@ -32,16 +32,18 @@
         @endif
     @elseif($step)
         {{-- Progress --}}
-        <div class="confessionnal-progress-wrapper">
-            @if($sectionProgress)
-                <div class="confessionnal-section-indicator">
-                    Section {{ $sectionProgress['current'] }} of {{ $sectionProgress['total'] }}
+        @if($showProgress)
+            <div class="confessionnal-progress-wrapper">
+                @if($sectionProgress)
+                    <div class="confessionnal-section-indicator">
+                        Section {{ $sectionProgress['current'] }} of {{ $sectionProgress['total'] }}
+                    </div>
+                @endif
+                <div class="confessionnal-progress">
+                    <div class="confessionnal-progress-bar" style="width: {{ $progress }}%"></div>
                 </div>
-            @endif
-            <div class="confessionnal-progress">
-                <div class="confessionnal-progress-bar" style="width: {{ $progress }}%"></div>
             </div>
-        </div>
+        @endif
 
         <div class="confessionnal-card confessionnal-step-transition" wire:key="step-{{ $currentStep }}">
             @if($step['type'] === 'intro')

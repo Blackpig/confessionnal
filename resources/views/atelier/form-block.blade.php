@@ -12,7 +12,7 @@
 
     <div class="{{ $block->getContainerClasses() }}">
         @if($slug)
-            @livewire('confessionnal.form-fill', ['slug' => $slug, 'locale' => app()->getLocale()], key('confessionnal-' . $blockId))
+            @livewire('confessionnal.form-fill', ['slug' => $slug, 'locale' => app()->getLocale(), 'showProgress' => $showProgress], key('confessionnal-' . $blockId))
         @endif
     </div>
 
