@@ -1,5 +1,5 @@
 {
-    "name": "blackpigcreatif/confessionnal",
+    "name": "blackpig-creatif/confessionnal",
     "description": "A Survey and Form Builder",
     "keywords": [
         "BlackpigCreatif",
@@ -9,10 +9,10 @@
         "filament-plugin",
         "confessionnal"
     ],
-    "homepage": "https://github.com/blackpigcreatif/confessionnal",
+    "homepage": "https://github.com/blackpig/confessionnal",
     "support": {
-        "issues": "https://github.com/blackpigcreatif/confessionnal/issues",
-        "source": "https://github.com/blackpigcreatif/confessionnal"
+        "issues": "https://github.com/blackpig/confessionnal/issues",
+        "source": "https://github.com/blackpig/confessionnal"
     },
     "license": "MIT",
     "authors": [
