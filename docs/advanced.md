@@ -65,24 +65,11 @@ With capture mode set to "whitelist" and `PROLIFIC_PID, STUDY_ID` configured:
 
 Only `PROLIFIC_PID` and `STUDY_ID` are captured. `utm_source` is ignored.
 
-## Completion redirect
+## Completion providers and redirect
 
-Instead of showing the default thank-you screen, you can redirect respondents to an external URL after submission.
+Confessionnal supports panel-recruitment services (Prolific, Cint, Toluna, MTurk) with automatic detection, completion codes, and provider-specific redirects. You can also configure a default redirect URL for non-panel respondents.
 
-### Configuration
-
-On the Form edit page, open the **Completion** tab:
-
-- **Redirect URL**: the destination URL
-- **Pass query params**: toggle to append captured query params to the redirect URL
-
-### Example
-
-With redirect URL `https://app.prolific.co/submissions/complete?cc=ABC123` and passthrough enabled, a respondent who arrived with `?PROLIFIC_PID=abc123` would be redirected to:
-
-```
-https://app.prolific.co/submissions/complete?cc=ABC123&PROLIFIC_PID=abc123
-```
+See [completion-providers.md](completion-providers.md) for full documentation, including custom provider classes.
 
 ## Preview mode
 

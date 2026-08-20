@@ -12,7 +12,7 @@ A conversational form and survey builder for [Filament v5](https://filamentphp.c
 - **Generic submissions** stored as JSON, plus optional **target model mapping** to write into real Eloquent models on submit
 - **CSV export** with section-prefixed headers for duplicate labels
 - **Query string capture** for panel-recruitment services (Prolific, etc.)
-- **Completion redirect** with param passthrough
+- **Completion providers** with automatic detection, completion codes, and provider-specific redirects for Prolific, Cint, Toluna, MTurk, and custom panels
 - **Lightweight analytics**: views, starts, completions, and per-page drop-off tracked in daily aggregate tables
 - **Preview mode** via signed URL from the admin panel
 - **Atelier block integration**: embed forms on Atelier-managed pages (optional, no hard dependency)
@@ -88,6 +88,7 @@ See [docs/theming.md](docs/theming.md) for the complete variable reference and e
 | Theming and CSS variables | [docs/theming.md](docs/theming.md) |
 | Atelier block integration | [docs/atelier.md](docs/atelier.md) |
 | Analytics and drop-off tracking | [docs/analytics.md](docs/analytics.md) |
+| Completion providers (Prolific, Cint, MTurk, custom) | [docs/completion-providers.md](docs/completion-providers.md) |
 | Conditional logic, randomisation, query capture, preview | [docs/advanced.md](docs/advanced.md) |
 
 ## Testing
