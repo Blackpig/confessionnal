@@ -2,6 +2,8 @@
 
 namespace BlackpigCreatif\Confessionnal\Contracts;
 
+use Filament\Forms\Components\Component;
+
 interface CompletionProvider
 {
     public static function getName(): string;
@@ -14,7 +16,7 @@ interface CompletionProvider
     /** @return array<string, mixed> Default config values applied when provider is selected */
     public static function getDefaults(): array;
 
-    /** @return array<\Filament\Forms\Components\Component> Filament form components for provider config */
+    /** @return array<Component> Filament form components for provider config */
     public static function getConfigSchema(): array;
 
     /** Check if the provider is detected in the given query params */

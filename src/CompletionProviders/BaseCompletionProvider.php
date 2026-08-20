@@ -4,6 +4,7 @@ namespace BlackpigCreatif\Confessionnal\CompletionProviders;
 
 use BlackpigCreatif\Confessionnal\Contracts\CompletionProvider;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -78,7 +79,7 @@ abstract class BaseCompletionProvider implements CompletionProvider
             ->default($default);
     }
 
-    /** @return array<\Filament\Forms\Components\Component> */
+    /** @return array<Component> */
     protected static function codeFields(string $defaultType = 'none', ?string $defaultParamKey = null): array
     {
         return [
