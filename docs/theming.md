@@ -4,19 +4,34 @@ The fill runtime ships with a clean default style. Every visual property is expo
 
 ## CSS custom properties
 
-Override any of these on `:root` (or a more specific selector) to restyle the form:
+Override any of these on `:root` (or scope to `.confessionnal-container` for embedded forms) to restyle the form:
 
 ### Core
 
 | Variable | Default | Description |
 |---|---|---|
-| `--cfnl-font-family` | `system-ui, -apple-system, sans-serif` | Font stack |
+| `--cfnl-font-family` | `system-ui, -apple-system, sans-serif` | Base font stack (inherited by labels, inputs, and buttons unless overridden) |
 | `--cfnl-max-width` | `640px` | Max width of the form card |
-| `--cfnl-bg` | `#f8fafc` | Page background |
+| `--cfnl-bg` | `#f8fafc` | Page background (standalone layout) |
 | `--cfnl-color` | `#1e293b` | Primary text colour |
 | `--cfnl-color-muted` | `#64748b` | Help text, subtext, completion message |
 | `--cfnl-color-hint` | `#94a3b8` | Section indicator, Enter hint |
 | `--cfnl-error` | `#ef4444` | Validation errors, required asterisk |
+
+### Typography
+
+These properties allow labels, inputs, and buttons to use different fonts. They all default to `var(--cfnl-font-family)`, so setting the base property is enough for a uniform font.
+
+| Variable | Default | Description |
+|---|---|---|
+| `--cfnl-label-font-family` | `var(--cfnl-font-family)` | Label font family |
+| `--cfnl-label-font-size` | `1.1rem` | Label font size |
+| `--cfnl-label-font-weight` | `600` | Label font weight |
+| `--cfnl-label-color` | `var(--cfnl-color)` | Label text colour |
+| `--cfnl-label-letter-spacing` | `normal` | Label letter spacing |
+| `--cfnl-label-text-transform` | `none` | Label text transform (e.g. `uppercase`) |
+| `--cfnl-input-font-family` | `var(--cfnl-font-family)` | Input/textarea/select font family |
+| `--cfnl-btn-font-family` | `var(--cfnl-font-family)` | Button font family |
 
 ### Brand / accent
 
@@ -34,6 +49,7 @@ Override any of these on `:root` (or a more specific selector) to restyle the fo
 | `--cfnl-input-bg` | `white` | Input/textarea/select background |
 | `--cfnl-input-border` | `#cbd5e1` | Input border colour |
 | `--cfnl-input-radius` | `0.5rem` | Border radius for inputs, options, images |
+| `--cfnl-input-padding` | `0.75rem 1rem` | Input padding |
 | `--cfnl-option-border` | `#e2e8f0` | Border for radio/checkbox/scale cards |
 
 ### Buttons
@@ -54,7 +70,7 @@ Override any of these on `:root` (or a more specific selector) to restyle the fo
 
 ## Quick example: brand colour override
 
-To change the accent colour across the entire form, override `--cfnl-primary` and its related properties. The simplest approach is a `<style>` block in the published layout:
+To change the accent colour across the entire form, override `--cfnl-primary` and its related properties:
 
 ```css
 :root {
@@ -62,6 +78,47 @@ To change the accent colour across the entire form, override `--cfnl-primary` an
     --cfnl-primary-hover: #059669;
     --cfnl-primary-light: #ecfdf5;
     --cfnl-primary-ring: rgba(16, 185, 129, 0.1);
+}
+```
+
+## Scoped overrides for embedded forms
+
+When embedding a form via the [Atelier block](atelier.md) or a custom Livewire include, scope overrides to `.confessionnal-container` so they only apply to the form and don't leak into the rest of your page:
+
+```css
+.confessionnal-container {
+    --cfnl-font-family: 'Inter', sans-serif;
+    --cfnl-label-font-family: 'Montserrat', sans-serif;
+    --cfnl-label-font-size: 0.875rem;
+    --cfnl-label-text-transform: uppercase;
+    --cfnl-label-letter-spacing: 0.1em;
+    --cfnl-primary: #7c3aed;
+    --cfnl-input-radius: 1rem;
+    --cfnl-btn-radius: 9999px;
+}
+```
+
+## Tailwind v4 integration
+
+If your site uses Tailwind v4 with `@theme` tokens, you can wire the Confessionnal properties directly to your design system. This keeps everything in sync without duplicating colour values:
+
+```css
+/* resources/css/app.css */
+.confessionnal-container {
+    --cfnl-font-family: var(--font-body);
+    --cfnl-label-font-family: var(--font-accent);
+    --cfnl-label-font-size: var(--text-sm);
+    --cfnl-label-font-weight: 500;
+    --cfnl-label-color: var(--color-muted);
+    --cfnl-label-letter-spacing: 0.1em;
+    --cfnl-label-text-transform: uppercase;
+    --cfnl-primary: var(--color-primary);
+    --cfnl-primary-hover: var(--color-primary-dark);
+    --cfnl-input-border: var(--color-border);
+    --cfnl-input-radius: 1rem;
+    --cfnl-input-padding: 1rem 1.5rem;
+    --cfnl-btn-radius: 9999px;
+    --cfnl-btn-font-family: var(--font-accent);
 }
 ```
 
@@ -85,20 +142,7 @@ To change the accent colour across the entire form, override `--cfnl-primary` an
 
 ### Level 1: CSS variables only (no publish needed)
 
-Add a `<style>` tag to your app layout or load a stylesheet that overrides the `--cfnl-*` variables. This works without publishing any views because the variables are defined with defaults on `:root`.
-
-If your app already has a global stylesheet, just add the overrides there:
-
-```css
-/* resources/css/app.css */
-:root {
-    --cfnl-primary: #7c3aed;
-    --cfnl-primary-hover: #6d28d9;
-    --cfnl-font-family: 'Inter', sans-serif;
-}
-```
-
-Then include it in the published layout (see Level 2).
+Add overrides to your app's stylesheet. For standalone forms, target `:root`. For embedded forms (Atelier block), scope to `.confessionnal-container`.
 
 ### Level 2: Publish and edit the layout
 

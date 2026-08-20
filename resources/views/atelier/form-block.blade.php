@@ -1,3 +1,5 @@
+@include('confessionnal::partials.styles')
+
 @php
     $blockIdentifier = 'atelier-' . $block::getBlockIdentifier();
     $fragmentId = $block->getFragmentId();

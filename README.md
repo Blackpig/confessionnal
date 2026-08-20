@@ -86,6 +86,7 @@ See [docs/theming.md](docs/theming.md) for the complete variable reference and e
 | Submissions and CSV export | [docs/submissions.md](docs/submissions.md) |
 | Target model mapping | [docs/target-model-mapping.md](docs/target-model-mapping.md) |
 | Theming and CSS variables | [docs/theming.md](docs/theming.md) |
+| Atelier block integration | [docs/atelier.md](docs/atelier.md) |
 | Analytics and drop-off tracking | [docs/analytics.md](docs/analytics.md) |
 | Conditional logic, randomisation, query capture, preview | [docs/advanced.md](docs/advanced.md) |
 

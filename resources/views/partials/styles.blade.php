@@ -2,6 +2,15 @@
 <style>
     :root {
         --cfnl-font-family: system-ui, -apple-system, sans-serif;
+        --cfnl-label-font-family: var(--cfnl-font-family);
+        --cfnl-label-font-size: 1.1rem;
+        --cfnl-label-font-weight: 600;
+        --cfnl-label-color: var(--cfnl-color);
+        --cfnl-label-letter-spacing: normal;
+        --cfnl-label-text-transform: none;
+        --cfnl-input-font-family: var(--cfnl-font-family);
+        --cfnl-input-padding: 0.75rem 1rem;
+        --cfnl-btn-font-family: var(--cfnl-font-family);
         --cfnl-max-width: 640px;
 
         /* Colours */
@@ -36,6 +45,7 @@
 
     .confessionnal-container {
         font-family: var(--cfnl-font-family);
+        font-size: 1rem;
         color: var(--cfnl-color);
         display: flex;
         flex-direction: column;
@@ -95,14 +105,18 @@
     .confessionnal-field { margin-bottom: 1.5rem; }
     .confessionnal-field label {
         display: block;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        font-size: 1.1rem;
+        font-family: var(--cfnl-label-font-family);
+        font-size: var(--cfnl-label-font-size);
+        font-weight: var(--cfnl-label-font-weight);
+        color: var(--cfnl-label-color);
+        letter-spacing: var(--cfnl-label-letter-spacing);
+        text-transform: var(--cfnl-label-text-transform);
+        margin-bottom: 0.25rem;
     }
     .confessionnal-field .help-text {
         color: var(--cfnl-color-muted);
         font-size: 0.875rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.25rem;
     }
     .confessionnal-field .required-mark { color: var(--cfnl-error); }
 
@@ -111,10 +125,13 @@
     .confessionnal-field textarea,
     .confessionnal-field select {
         width: 100%;
-        padding: 0.75rem 1rem;
+        margin: 0;
+        padding: var(--cfnl-input-padding);
         border: 1px solid var(--cfnl-input-border);
         border-radius: var(--cfnl-input-radius);
+        font-family: var(--cfnl-input-font-family);
         font-size: 1rem;
+        line-height: 1.5;
         background: var(--cfnl-input-bg);
         transition: border-color 0.15s ease;
     }
@@ -168,6 +185,7 @@
     .confessionnal-btn {
         padding: 0.75rem 1.5rem;
         border-radius: var(--cfnl-btn-radius);
+        font-family: var(--cfnl-btn-font-family);
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
