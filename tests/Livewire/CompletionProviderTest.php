@@ -1,5 +1,9 @@
 <?php
 
+use BlackpigCreatif\Confessionnal\CompletionProviders\CintProvider;
+use BlackpigCreatif\Confessionnal\CompletionProviders\GenericProvider;
+use BlackpigCreatif\Confessionnal\CompletionProviders\MTurkProvider;
+use BlackpigCreatif\Confessionnal\CompletionProviders\ProlificProvider;
 use BlackpigCreatif\Confessionnal\Enums\FieldType;
 use BlackpigCreatif\Confessionnal\Enums\FormMode;
 use BlackpigCreatif\Confessionnal\Livewire\FormFill;
@@ -49,10 +53,8 @@ function createFormWithProvider(array $providers = [], array $extraSettings = []
 it('detects a provider by query parameter', function () {
     $form = createFormWithProvider([
         [
-            'name' => 'Prolific',
-            'detect_param' => 'PROLIFIC_PID',
+            'provider' => ProlificProvider::class,
             'redirect_url' => 'https://app.prolific.com/submissions/complete',
-            'passthrough_params' => false,
             'code_type' => 'static',
             'static_code' => 'ABC123',
             'code_param_key' => 'cc',
@@ -62,16 +64,14 @@ it('detects a provider by query parameter', function () {
     $component = Livewire::withQueryParams(['PROLIFIC_PID' => 'participant1'])
         ->test(FormFill::class, ['slug' => 'provider-test']);
 
-    expect($component->get('matchedProvider')['name'])->toBe('Prolific');
+    expect($component->get('matchedProvider')['provider'])->toBe(ProlificProvider::class);
 });
 
 it('does not match a provider when detect param is absent', function () {
     $form = createFormWithProvider([
         [
-            'name' => 'Prolific',
-            'detect_param' => 'PROLIFIC_PID',
+            'provider' => ProlificProvider::class,
             'redirect_url' => 'https://app.prolific.com/submissions/complete',
-            'passthrough_params' => false,
             'code_type' => 'static',
             'static_code' => 'ABC123',
             'code_param_key' => 'cc',
@@ -86,10 +86,8 @@ it('does not match a provider when detect param is absent', function () {
 it('uses static completion code and redirects for Prolific-style provider', function () {
     $form = createFormWithProvider([
         [
-            'name' => 'Prolific',
-            'detect_param' => 'PROLIFIC_PID',
+            'provider' => ProlificProvider::class,
             'redirect_url' => 'https://app.prolific.com/submissions/complete',
-            'passthrough_params' => false,
             'code_type' => 'static',
             'static_code' => 'STUDY99',
             'code_param_key' => 'cc',
@@ -115,13 +113,8 @@ it('uses static completion code and redirects for Prolific-style provider', func
 it('generates dynamic completion code per submission', function () {
     $form = createFormWithProvider([
         [
-            'name' => 'MTurk',
-            'detect_param' => 'assignmentId',
-            'redirect_url' => '',
-            'passthrough_params' => false,
+            'provider' => MTurkProvider::class,
             'code_type' => 'dynamic',
-            'static_code' => '',
-            'code_param_key' => '',
         ],
     ]);
 
@@ -142,13 +135,10 @@ it('generates dynamic completion code per submission', function () {
 it('passes captured params through to provider redirect URL', function () {
     $form = createFormWithProvider([
         [
-            'name' => 'Cint',
-            'detect_param' => 'rid',
+            'provider' => CintProvider::class,
             'redirect_url' => 'https://s.cint.com/Survey/Complete?ProjectToken=XYZ',
             'passthrough_params' => true,
             'code_type' => 'none',
-            'static_code' => '',
-            'code_param_key' => '',
         ],
     ]);
 
@@ -168,10 +158,8 @@ it('falls back to default redirect when no provider matches', function () {
     $form = createFormWithProvider(
         providers: [
             [
-                'name' => 'Prolific',
-                'detect_param' => 'PROLIFIC_PID',
+                'provider' => ProlificProvider::class,
                 'redirect_url' => 'https://app.prolific.com/submissions/complete',
-                'passthrough_params' => false,
                 'code_type' => 'static',
                 'static_code' => 'ABC',
                 'code_param_key' => 'cc',
@@ -199,39 +187,31 @@ it('falls back to default redirect when no provider matches', function () {
 it('matches the first provider when multiple detect params are present', function () {
     $form = createFormWithProvider([
         [
-            'name' => 'Prolific',
-            'detect_param' => 'PROLIFIC_PID',
+            'provider' => ProlificProvider::class,
             'redirect_url' => 'https://prolific.com/complete',
-            'passthrough_params' => false,
             'code_type' => 'static',
             'static_code' => 'PRO1',
             'code_param_key' => 'cc',
         ],
         [
-            'name' => 'Cint',
-            'detect_param' => 'rid',
+            'provider' => CintProvider::class,
             'redirect_url' => 'https://cint.com/complete',
-            'passthrough_params' => false,
             'code_type' => 'none',
-            'static_code' => '',
-            'code_param_key' => '',
         ],
     ]);
 
     $component = Livewire::withQueryParams(['PROLIFIC_PID' => 'p1', 'rid' => 'r1'])
         ->test(FormFill::class, ['slug' => 'provider-test']);
 
-    expect($component->get('matchedProvider')['name'])->toBe('Prolific');
+    expect($component->get('matchedProvider')['provider'])->toBe(ProlificProvider::class);
 });
 
 it('detects provider even when query capture mode is none', function () {
     $form = createFormWithProvider(
         providers: [
             [
-                'name' => 'Prolific',
-                'detect_param' => 'PROLIFIC_PID',
+                'provider' => ProlificProvider::class,
                 'redirect_url' => 'https://prolific.com/complete',
-                'passthrough_params' => false,
                 'code_type' => 'static',
                 'static_code' => 'CODE1',
                 'code_param_key' => 'cc',
@@ -245,10 +225,32 @@ it('detects provider even when query capture mode is none', function () {
     $component = Livewire::withQueryParams(['PROLIFIC_PID' => 'p1'])
         ->test(FormFill::class, ['slug' => 'provider-test']);
 
-    expect($component->get('matchedProvider')['name'])->toBe('Prolific');
+    expect($component->get('matchedProvider')['provider'])->toBe(ProlificProvider::class);
 
     $component->call('next');
     $component->call('next');
 
     expect($component->get('redirectUrl'))->toBe('https://prolific.com/complete?cc=CODE1');
+});
+
+it('detects a generic provider with custom detect param', function () {
+    $form = createFormWithProvider([
+        [
+            'provider' => GenericProvider::class,
+            'detect_param' => 'custom_id',
+            'redirect_url' => 'https://example.com/complete',
+            'code_type' => 'none',
+        ],
+    ]);
+
+    $component = Livewire::withQueryParams(['custom_id' => 'abc'])
+        ->test(FormFill::class, ['slug' => 'provider-test']);
+
+    expect($component->get('matchedProvider')['provider'])->toBe(GenericProvider::class);
+
+    $component->call('next');
+    $component->call('next');
+
+    expect($component->get('completed'))->toBeTrue();
+    expect($component->get('redirectUrl'))->toBe('https://example.com/complete');
 });

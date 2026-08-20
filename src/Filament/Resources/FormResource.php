@@ -3,14 +3,17 @@
 namespace BlackpigCreatif\Confessionnal\Filament\Resources;
 
 use BlackpigCreatif\Confessionnal\Contracts\CanReceiveSubmissions;
+use BlackpigCreatif\Confessionnal\Contracts\CompletionProvider;
 use BlackpigCreatif\Confessionnal\Enums\FormMode;
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\Pages;
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\RelationManagers;
 use BlackpigCreatif\Confessionnal\Filament\Resources\FormResource\Widgets;
 use BlackpigCreatif\Confessionnal\Models\Form;
 use BlackpigCreatif\Confessionnal\Support\ModelDiscovery;
+use BlackpigCreatif\Confessionnal\Support\ProviderRegistry;
 use Filament\Actions;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Schemas\Components\Group;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -86,44 +89,42 @@ class FormResource extends Resource
                                 ->label('Panel providers')
                                 ->helperText('Configure provider-specific completion handling. Respondents are matched by the presence of a query parameter.')
                                 ->schema([
-                                    TextInput::make('name')
-                                        ->label('Provider name')
-                                        ->placeholder('e.g. Prolific, Cint, Toluna')
-                                        ->required(),
-                                    TextInput::make('detect_param')
-                                        ->label('Detect by query parameter')
-                                        ->placeholder('e.g. PROLIFIC_PID, rid')
-                                        ->helperText('If this parameter is present in the URL, this provider is matched.')
-                                        ->required(),
-                                    TextInput::make('redirect_url')
-                                        ->label('Redirect URL')
-                                        ->url()
-                                        ->placeholder('e.g. https://app.prolific.com/submissions/complete'),
-                                    Toggle::make('passthrough_params')
-                                        ->label('Pass query params to redirect URL')
-                                        ->default(true),
-                                    Select::make('code_type')
-                                        ->label('Completion code')
-                                        ->options([
-                                            'none' => 'No code',
-                                            'static' => 'Static code (same for all respondents)',
-                                            'dynamic' => 'Dynamic code (unique per submission)',
-                                        ])
-                                        ->default('none')
-                                        ->live(),
-                                    TextInput::make('static_code')
-                                        ->label('Code')
-                                        ->visible(fn (Get $get): bool => $get('code_type') === 'static')
-                                        ->required(fn (Get $get): bool => $get('code_type') === 'static'),
-                                    TextInput::make('code_param_key')
-                                        ->label('Code parameter key')
-                                        ->placeholder('e.g. cc, code')
-                                        ->helperText('Query parameter name for appending the code to the redirect URL.')
-                                        ->visible(fn (Get $get): bool => in_array($get('code_type'), ['static', 'dynamic'])),
+                                    Select::make('provider')
+                                        ->label('Provider')
+                                        ->options(fn (): array => ProviderRegistry::options())
+                                        ->required()
+                                        ->live()
+                                        ->afterStateUpdated(function (Set $set, ?string $state): void {
+                                            if (! $state || ! class_exists($state)) {
+                                                return;
+                                            }
+
+                                            foreach ($state::getDefaults() as $key => $value) {
+                                                $set($key, $value);
+                                            }
+                                        }),
+                                    Group::make()
+                                        ->schema(function (Get $get): array {
+                                            $class = $get('provider');
+
+                                            if (! $class || ! class_exists($class) || ! is_subclass_of($class, CompletionProvider::class)) {
+                                                return [];
+                                            }
+
+                                            return $class::getConfigSchema();
+                                        }),
                                 ])
                                 ->collapsible()
                                 ->collapsed()
-                                ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'New provider')
+                                ->itemLabel(function (array $state): ?string {
+                                    $class = $state['provider'] ?? null;
+
+                                    if ($class && class_exists($class) && is_subclass_of($class, CompletionProvider::class)) {
+                                        return $class::getName();
+                                    }
+
+                                    return 'New provider';
+                                })
                                 ->defaultItems(0),
                         ]),
                     Tabs\Tab::make('Query Capture')

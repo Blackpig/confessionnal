@@ -211,7 +211,7 @@ class FormFill extends Component
                     'user_agent' => request()->userAgent(),
                     'referrer' => request()->header('referer'),
                     'query_params' => $this->capturedParams ?: null,
-                    'provider' => $this->matchedProvider['name'] ?? null,
+                    'provider' => $this->resolveProviderName($this->matchedProvider),
                 ]),
                 'completed_at' => now(),
             ]);
@@ -338,62 +338,86 @@ class FormFill extends Component
         $providers = $this->form->settings['completion_providers'] ?? [];
         $queryParams = request()->query();
 
-        foreach ($providers as $provider) {
-            $detectParam = $provider['detect_param'] ?? null;
+        foreach ($providers as $entry) {
+            $class = $entry['provider'] ?? null;
 
-            if ($detectParam && array_key_exists($detectParam, $queryParams)) {
-                return $provider;
+            if (! $class || ! class_exists($class)) {
+                continue;
+            }
+
+            $provider = new $class;
+            $config = collect($entry)->except('provider')->toArray();
+
+            if ($provider->detect($queryParams, $config)) {
+                return $entry;
             }
         }
 
         return null;
     }
 
-    protected function generateCompletionCode(?array $provider): ?string
+    protected function generateCompletionCode(?array $providerEntry): ?string
     {
-        if (! $provider) {
+        if (! $providerEntry) {
             return null;
         }
 
-        $codeType = $provider['code_type'] ?? 'none';
+        $class = $providerEntry['provider'] ?? null;
 
-        return match ($codeType) {
-            'static' => $provider['static_code'] ?? null,
-            'dynamic' => strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)),
-            default => null,
-        };
+        if (! $class || ! class_exists($class)) {
+            return null;
+        }
+
+        $provider = new $class;
+        $config = collect($providerEntry)->except('provider')->toArray();
+
+        return $provider->generateCode($config);
     }
 
-    protected function buildRedirectUrl(?array $provider = null, ?string $completionCode = null): ?string
+    protected function buildRedirectUrl(?array $providerEntry = null, ?string $completionCode = null): ?string
     {
         $settings = $this->form->settings ?? [];
 
         // Provider-specific redirect takes priority
-        if ($provider && ! empty($provider['redirect_url'])) {
-            $url = $provider['redirect_url'];
-            $passthrough = $provider['passthrough_params'] ?? false;
-        } else {
-            $url = $settings['redirect_url'] ?? null;
-            $passthrough = ! empty($settings['passthrough_params']);
+        if ($providerEntry) {
+            $class = $providerEntry['provider'] ?? null;
+
+            if ($class && class_exists($class)) {
+                $provider = new $class;
+                $config = collect($providerEntry)->except('provider')->toArray();
+
+                $url = $provider->buildRedirectUrl($config, $completionCode, $this->capturedParams);
+
+                if ($url) {
+                    return $url;
+                }
+            }
         }
+
+        // Fall back to default redirect URL
+        $url = $settings['redirect_url'] ?? null;
 
         if (! $url) {
             return null;
         }
 
-        // Append completion code
-        if ($completionCode && ! empty($provider['code_param_key'])) {
-            $separator = str_contains($url, '?') ? '&' : '?';
-            $url .= $separator . urlencode($provider['code_param_key']) . '=' . urlencode($completionCode);
-        }
-
-        // Append captured query params
-        if ($passthrough && ! empty($this->capturedParams)) {
+        if (! empty($settings['passthrough_params']) && ! empty($this->capturedParams)) {
             $separator = str_contains($url, '?') ? '&' : '?';
             $url .= $separator . http_build_query($this->capturedParams);
         }
 
         return $url;
+    }
+
+    protected function resolveProviderName(?array $providerEntry): ?string
+    {
+        $class = $providerEntry['provider'] ?? null;
+
+        if ($class && class_exists($class)) {
+            return $class::getName();
+        }
+
+        return null;
     }
 
     protected function buildSteps(): void
